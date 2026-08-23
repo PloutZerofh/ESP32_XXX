@@ -1,4 +1,9 @@
-idf_component_register(SRCS "main.c" "lcd.c" "lv_port.c" "touch.c"
-                           "assets/img_logo.c"
-                    INCLUDE_DIRS "."
-                    REQUIRES esp_timer esp_lcd driver lvgl)
+idf_component_register(
+    SRCS
+        "main.c"
+        "tasks/task_ui.c"
+        "ui/screen_display/screen_main.c"
+        "ui/assets/images/img_logo.c"
+    INCLUDE_DIRS "." "ui"
+    REQUIRES bsp lvgl_port lvgl
+)

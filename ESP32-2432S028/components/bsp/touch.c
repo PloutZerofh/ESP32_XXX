@@ -14,6 +14,7 @@ static const char *TAG = "touch";
 static spi_device_handle_t s_spi;
 static bool s_ready;
 
+/* 通过 SPI 读取 XPT2046 指定通道的一次 12 位原始 ADC 采样。 */
 static uint16_t xpt_read_raw(uint8_t cmd)
 {
     uint8_t tx[3] = {cmd, 0x00, 0x00};
@@ -30,6 +31,7 @@ static uint16_t xpt_read_raw(uint8_t cmd)
     return (uint16_t)(((rx[1] << 8) | rx[2]) >> 3);
 }
 
+/* 对五个样本原地排序并返回中位数，以抑制触摸噪声。 */
 static uint16_t median5(uint16_t *v)
 {
     for (int i = 0; i < 4; ++i) {
@@ -44,6 +46,7 @@ static uint16_t median5(uint16_t *v)
     return v[2];
 }
 
+/* 读取 X/Y 原始坐标的多次采样中位数，并过滤明显无效的数据。 */
 static bool read_raw_xy(uint16_t *x, uint16_t *y)
 {
     uint16_t xs[XPT_SAMPLES];
@@ -64,6 +67,7 @@ static bool read_raw_xy(uint16_t *x, uint16_t *y)
     return true;
 }
 
+/* 将输入范围内的值线性映射到从零开始的输出范围，并进行边界钳位。 */
 static int16_t map_range(int32_t v, int32_t in_min, int32_t in_max, int32_t out_max)
 {
     if (v < in_min) {
@@ -78,6 +82,7 @@ static int16_t map_range(int32_t v, int32_t in_min, int32_t in_max, int32_t out_
     return (int16_t)(((v - in_min) * out_max) / (in_max - in_min));
 }
 
+/* 初始化 XPT2046 的中断引脚和 SPI 设备，供后续触摸采样使用。 */
 esp_err_t touch_init(void)
 {
     gpio_config_t irq_cfg = {
@@ -125,6 +130,7 @@ esp_err_t touch_init(void)
     return ESP_OK;
 }
 
+/* 读取当前触摸点，并转换为经过轴交换和翻转配置后的 LCD 坐标。 */
 bool touch_read(int16_t *x, int16_t *y)
 {
     if (!s_ready || !x || !y) {

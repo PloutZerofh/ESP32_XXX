@@ -20,7 +20,7 @@ for y in range(H):
         pixels.append(c & 0xFF)
         pixels.append((c >> 8) & 0xFF)
 
-out = Path(__file__).resolve().parents[1] / "main" / "assets"
+out = Path(__file__).resolve().parents[1] / "main" / "ui" / "assets" / "images"
 out.mkdir(parents=True, exist_ok=True)
 
 lines = []

@@ -2,7 +2,7 @@
 """Convert PNG to LVGL 8 C array (RGB565, LV_COLOR_16_SWAP=0).
 
 Usage:
-  python tools/img2lvgl.py logo.png main/assets/img_logo.c img_logo
+  python tools/img2lvgl.py logo.png main/ui/assets/images/img_logo.c img_logo
 """
 from __future__ import annotations
 

@@ -15,21 +15,25 @@ static esp_lcd_panel_io_handle_t s_io;
 static uint16_t *s_line;
 static int s_line_cap;
 
+/* 将 RGB565 像素从 CPU 小端序转换为 LCD SPI 所需的大端序。 */
 static inline uint16_t color_to_be(uint16_t color)
 {
     return (uint16_t)((color << 8) | (color >> 8));
 }
 
+/* 向 LCD 发送一条不带参数的命令。 */
 static void lcd_cmd(uint8_t cmd)
 {
     ESP_ERROR_CHECK(esp_lcd_panel_io_tx_param(s_io, cmd, NULL, 0));
 }
 
+/* 向 LCD 发送一条命令及其参数数据。 */
 static void lcd_cmd_data(uint8_t cmd, const void *data, size_t len)
 {
     ESP_ERROR_CHECK(esp_lcd_panel_io_tx_param(s_io, cmd, data, len));
 }
 
+/* 分配或复用用于 SPI 异步传输的 DMA 单行像素缓冲区。 */
 static esp_err_t line_buf_init(void)
 {
     const int need = BOARD_LCD_H_RES;
@@ -44,6 +48,7 @@ static esp_err_t line_buf_init(void)
     return ESP_OK;
 }
 
+/* 按 ILI9341 控制器的推荐时序配置寄存器并点亮显示面板。 */
 static void ili9341_init(void)
 {
     lcd_cmd(LCD_CMD_SWRESET);
@@ -90,6 +95,7 @@ static void ili9341_init(void)
     vTaskDelay(pdMS_TO_TICKS(20));
 }
 
+/* 设置后续 RAM 写入操作的 LCD 矩形地址窗口。 */
 static void set_window(int x0, int y0, int x1, int y1)
 {
     uint8_t caset[] = {
@@ -105,6 +111,7 @@ static void set_window(int x0, int y0, int x1, int y1)
     lcd_cmd(LCD_CMD_RAMWR);
 }
 
+/* 初始化背光、SPI 总线和 ILI9341 面板，并清空屏幕。 */
 esp_err_t lcd_init(void)
 {
     gpio_config_t bk_gpio_config = {
@@ -144,6 +151,7 @@ esp_err_t lcd_init(void)
     return ESP_OK;
 }
 
+/* 在可视区域内填充指定 RGB565 颜色的矩形，自动裁剪越界部分。 */
 void lcd_fill_rect(int x, int y, int w, int h, uint16_t color)
 {
     if (w <= 0 || h <= 0 || !s_line) {
@@ -179,11 +187,13 @@ void lcd_fill_rect(int x, int y, int w, int h, uint16_t color)
     }
 }
 
+/* 用指定 RGB565 颜色填满整个 LCD 屏幕。 */
 void lcd_fill_screen(uint16_t color)
 {
     lcd_fill_rect(0, 0, BOARD_LCD_H_RES, BOARD_LCD_V_RES, color);
 }
 
+/* 绘制 RGB565 位图，并裁剪超出 LCD 可视区域的部分。 */
 void lcd_draw_bitmap(int x, int y, int w, int h, const uint16_t *data)
 {
     if (!data || w <= 0 || h <= 0 || !s_line) {
@@ -223,11 +233,13 @@ void lcd_draw_bitmap(int x, int y, int w, int h, const uint16_t *data)
     }
 }
 
+/* 返回 LCD 的逻辑水平分辨率。 */
 int lcd_width(void)
 {
     return BOARD_LCD_H_RES;
 }
 
+/* 返回 LCD 的逻辑垂直分辨率。 */
 int lcd_height(void)
 {
     return BOARD_LCD_V_RES;
